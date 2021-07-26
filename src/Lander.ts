@@ -1,4 +1,5 @@
 import P5 from 'p5';
+import {DNA} from './DNA';
 import {FLOOR_HEIGHT} from './Floor';
 
 export class Lander {
@@ -24,10 +25,15 @@ export class Lander {
     baseVertices: P5.Vector[];
     screenVertices: P5.Vector[];
     isTouchingGround: boolean;
+    DNA: DNA;
 
     constructor(p5) {
         this.p5 = p5;
         this.pos = p5.createVector(250, 0);
+
+        this.pos.x = p5.map(Math.random(), 0, 1, 0, p5.width);
+        this.pos.y = p5.map(Math.random(), 0, 1, p5.height / 2, 0);
+
         this.speed = p5.createVector(0, 0);
         this.acceleration = p5.createVector(0, -1);
 
@@ -42,6 +48,8 @@ export class Lander {
             rotate_counterclockwise: 0,
             thrust: 0
         };
+
+        this.DNA = new DNA();
 
         // The vertices representing the lander in the sqare of 1x1
         // these vertices are scaled, translated and rotated depending on this.size
@@ -119,7 +127,21 @@ export class Lander {
         this.r_acceleration += rotation;
     }
 
+    decideInputs() {
+        const inputs = this.DNA.outputs({position: this.pos.y, rotation: this.rotation.heading()});
+        if (inputs.thrust) {
+            this.thrust();
+        }
+        if (inputs.rotation_clockwise) {
+            this.rotate(true);
+        }
+        if (inputs.rotation_counterclockwise) {
+            this.rotate(false);
+        }
+    }
+
     move() {
+        this.decideInputs();
         // Handle velocity
         this.speed.add(this.acceleration);
         this.speed.limit(10);
@@ -192,7 +214,7 @@ export class Lander {
         }
         this.p5.endShape('close');
         this.drawAnimations();
-        this.drawStats();
+        // this.drawStats();
     }
 
     drawStats() {

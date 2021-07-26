@@ -5,7 +5,8 @@ import {Lander} from './Lander';
 import {drawFloor} from './Floor';
 
 const sketch = (p5: P5) => {
-    let lander: Lander;
+    // let lander: Lander;
+    let landers: Lander[];
     let time: number;
     let gravity: P5.Vector;
     let D: number;
@@ -18,7 +19,11 @@ const sketch = (p5: P5) => {
         const canvas = p5.createCanvas(D, D);
         canvas.parent('app');
 
-        lander = new Lander(p5);
+        // lander = new Lander(p5);
+        landers = [];
+        for (let i = 0; i < 10; i++) {
+            landers.push(new Lander(p5));
+        }
         time = 0;
         gravity = p5.createVector(0, 0.5);
     };
@@ -27,11 +32,12 @@ const sketch = (p5: P5) => {
         p5.background(30, 30, 30);
         drawFloor(p5);
         time++;
-        lander.move();
-        lander.draw();
+        for (const lander of landers) {
+            lander.move();
+            lander.draw();
+            lander.applyForce(gravity);
+        }
         drawFPS();
-
-        lander.applyForce(gravity);
         handleInputs();
     };
 
@@ -51,16 +57,24 @@ const sketch = (p5: P5) => {
     const handleInputs = () => {
         let SPACE = 32;
         if (p5.keyIsDown(SPACE)) {
-            lander.freeze();
+            for (const lander of landers) {
+                lander.freeze();
+            }
         }
         if (p5.keyIsDown(p5.UP_ARROW)) {
-            lander.thrust();
+            for (const lander of landers) {
+                lander.thrust();
+            }
         }
         if (p5.keyIsDown(p5.LEFT_ARROW)) {
-            lander.rotate(false);
+            for (const lander of landers) {
+                lander.rotate(false);
+            }
         }
         if (p5.keyIsDown(p5.RIGHT_ARROW)) {
-            lander.rotate(true);
+            for (const lander of landers) {
+                lander.rotate(true);
+            }
         }
     };
 };
