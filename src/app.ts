@@ -9,14 +9,17 @@ const sketch = (p5: P5) => {
     let landers: Lander[];
     let time: number;
     let gravity: P5.Vector;
-    let D: number;
+    // let D: number;
+    let W: number;
+    let H: number;
     let frameRateHistory: number[];
 
     p5.setup = () => {
         // Creating and positioning the canvas
-        D = 500;
+        H = 500;
+        W = 700;
         frameRateHistory = new Array(10).fill(0);
-        const canvas = p5.createCanvas(D, D);
+        const canvas = p5.createCanvas(W, H);
         canvas.parent('app');
 
         // lander = new Lander(p5);

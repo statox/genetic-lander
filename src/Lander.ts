@@ -40,6 +40,9 @@ export class Lander {
         this.r_acceleration = 0;
         this.r_speed = 0;
         this.rotation = p5.createVector(1, 0);
+
+        this.rotation.rotate(p5.map(Math.random(), 0, 1, -1, 1));
+
         this.size = 50;
         this.isTouchingGround = false;
 
