@@ -2,6 +2,7 @@ import P5 from 'p5';
 import 'p5/lib/addons/p5.dom';
 import './styles.scss';
 import {Lander} from './Lander';
+import {drawFloor} from './Floor';
 
 const sketch = (p5: P5) => {
     let lander: Lander;
@@ -22,6 +23,7 @@ const sketch = (p5: P5) => {
 
     p5.draw = () => {
         p5.background(30, 30, 30);
+        drawFloor(p5);
         time++;
         lander.move();
         lander.draw();
