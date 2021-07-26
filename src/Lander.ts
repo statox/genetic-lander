@@ -164,17 +164,18 @@ export class Lander {
         this.p5.push();
         this.p5.translate(this.pos.x, this.pos.y);
         this.p5.rotate(this.rotation.heading());
+        this.p5.strokeWeight(1);
         if (now < this.animation_ts.thrust) {
             this.p5.stroke(247, 143, 7);
-            this.p5.line(0, this.size / 2, 0, this.size / 2 + 30);
+            this.p5.triangle(-this.size / 10, this.size / 2, this.size / 10, this.size / 2, 0, this.size / 2 + 30);
         }
         if (now < this.animation_ts.rotate_clockwise) {
             this.p5.stroke(3, 150, 173);
-            this.p5.line(0, -this.size / 3, -50, -this.size / 3);
+            this.p5.triangle(0, -this.size / 3, -10, -this.size / 3 - 5, -10, -this.size / 3 + 5);
         }
         if (now < this.animation_ts.rotate_counterclockwise) {
             this.p5.stroke(3, 150, 173);
-            this.p5.line(0, -this.size / 3, 50, -this.size / 3);
+            this.p5.triangle(0, -this.size / 3, 10, -this.size / 3 - 5, 10, -this.size / 3 + 5);
         }
         this.p5.pop();
     }
