@@ -3,7 +3,12 @@ import {DNA} from './DNA';
 import {FLOOR_HEIGHT} from './Floor';
 
 const CRASH_SPEED = 4;
+const GRAVITY = new P5.Vector();
+GRAVITY.x = 0;
+GRAVITY.y = 0.5;
+
 export class Lander {
+    id: number;
     pos: P5.Vector;
     speed: P5.Vector; // Vertical-horizontal speed
     acceleration: P5.Vector; // Vertical-horizontal acc
@@ -30,7 +35,8 @@ export class Lander {
     fuel: number;
     crashed: boolean;
 
-    constructor(p5) {
+    constructor(p5: P5, id: number, sourceDNA?: DNA) {
+        this.id = id;
         this.p5 = p5;
         this.pos = p5.createVector(250, 0);
 
@@ -44,7 +50,7 @@ export class Lander {
         this.r_speed = 0;
         this.rotation = p5.createVector(1, 0);
 
-        // this.rotation.rotate(p5.map(Math.random(), 0, 1, -1, 1));
+        this.rotation.rotate(p5.map(Math.random(), 0, 1, -1, 1));
 
         this.size = 50;
         this.isTouchingGround = false;
@@ -55,7 +61,7 @@ export class Lander {
             thrust: 0
         };
 
-        this.DNA = new DNA();
+        this.DNA = sourceDNA || new DNA();
         this.fuel = 300;
 
         // The vertices representing the lander in the sqare of 1x1
@@ -159,6 +165,8 @@ export class Lander {
         if (this.crashed) {
             return;
         }
+        this.applyForce(GRAVITY);
+
         this.decideInputs();
         // Handle velocity
         this.speed.add(this.acceleration);

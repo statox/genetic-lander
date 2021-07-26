@@ -3,13 +3,12 @@ import 'p5/lib/addons/p5.dom';
 import './styles.scss';
 import {Lander} from './Lander';
 import {drawFloor} from './Floor';
+import {Pool} from './Pool';
 
 const sketch = (p5: P5) => {
-    // let lander: Lander;
-    let landers: Lander[];
+    let pool: Pool;
     let time: number;
     let gravity: P5.Vector;
-    // let D: number;
     let W: number;
     let H: number;
     let frameRateHistory: number[];
@@ -17,29 +16,20 @@ const sketch = (p5: P5) => {
     p5.setup = () => {
         // Creating and positioning the canvas
         H = 800;
-        W = 700;
+        W = 900;
         frameRateHistory = new Array(10).fill(0);
         const canvas = p5.createCanvas(W, H);
         canvas.parent('app');
 
-        // lander = new Lander(p5);
-        landers = [];
-        for (let i = 0; i < 10; i++) {
-            landers.push(new Lander(p5));
-        }
+        pool = new Pool(p5);
         time = 0;
-        gravity = p5.createVector(0, 0.5);
     };
 
     p5.draw = () => {
         p5.background(30, 30, 30);
         drawFloor(p5);
         time++;
-        for (const lander of landers) {
-            lander.move();
-            lander.draw();
-            lander.applyForce(gravity);
-        }
+        pool.update(p5);
         drawFPS();
         handleInputs();
     };
@@ -60,22 +50,22 @@ const sketch = (p5: P5) => {
     const handleInputs = () => {
         let SPACE = 32;
         if (p5.keyIsDown(SPACE)) {
-            for (const lander of landers) {
+            for (const lander of pool.landers) {
                 lander.freeze();
             }
         }
         if (p5.keyIsDown(p5.UP_ARROW)) {
-            for (const lander of landers) {
+            for (const lander of pool.landers) {
                 lander.thrust();
             }
         }
         if (p5.keyIsDown(p5.LEFT_ARROW)) {
-            for (const lander of landers) {
+            for (const lander of pool.landers) {
                 lander.rotate(false);
             }
         }
         if (p5.keyIsDown(p5.RIGHT_ARROW)) {
-            for (const lander of landers) {
+            for (const lander of pool.landers) {
                 lander.rotate(true);
             }
         }
