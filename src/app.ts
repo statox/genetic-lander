@@ -9,10 +9,12 @@ const sketch = (p5: P5) => {
     let time: number;
     let gravity: P5.Vector;
     let D: number;
+    let frameRateHistory: number[];
 
     p5.setup = () => {
         // Creating and positioning the canvas
         D = 500;
+        frameRateHistory = new Array(10).fill(0);
         const canvas = p5.createCanvas(D, D);
         canvas.parent('app');
 
@@ -27,9 +29,23 @@ const sketch = (p5: P5) => {
         time++;
         lander.move();
         lander.draw();
+        drawFPS();
 
         lander.applyForce(gravity);
         handleInputs();
+    };
+
+    const drawFPS = () => {
+        const fpsText = `${getFrameRate()} fps`;
+        p5.noStroke();
+        p5.fill(255);
+        p5.text(fpsText, p5.width - p5.textWidth(fpsText), 10);
+    };
+    const getFrameRate = () => {
+        frameRateHistory.shift();
+        frameRateHistory.push(p5.frameRate());
+        let total = frameRateHistory.reduce((a, b) => a + b) / frameRateHistory.length;
+        return total.toFixed(0);
     };
 
     const handleInputs = () => {
