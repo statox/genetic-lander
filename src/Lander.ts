@@ -2,6 +2,7 @@ import P5 from 'p5';
 import {DNA} from './DNA';
 import {FLOOR_HEIGHT} from './Floor';
 
+const CRASH_SPEED = 4;
 export class Lander {
     pos: P5.Vector;
     speed: P5.Vector; // Vertical-horizontal speed
@@ -27,13 +28,14 @@ export class Lander {
     isTouchingGround: boolean;
     DNA: DNA;
     fuel: number;
+    crashed: boolean;
 
     constructor(p5) {
         this.p5 = p5;
         this.pos = p5.createVector(250, 0);
 
         this.pos.x = p5.map(Math.random(), 0, 1, 0, p5.width);
-        this.pos.y = p5.map(Math.random(), 0, 1, p5.height / 2, 0);
+        // this.pos.y = p5.map(Math.random(), 0, 1, p5.height / 2, 0);
 
         this.speed = p5.createVector(0, 0);
         this.acceleration = p5.createVector(0, -1);
@@ -42,7 +44,7 @@ export class Lander {
         this.r_speed = 0;
         this.rotation = p5.createVector(1, 0);
 
-        this.rotation.rotate(p5.map(Math.random(), 0, 1, -1, 1));
+        // this.rotation.rotate(p5.map(Math.random(), 0, 1, -1, 1));
 
         this.size = 50;
         this.isTouchingGround = false;
@@ -137,7 +139,11 @@ export class Lander {
     }
 
     decideInputs() {
-        const inputs = this.DNA.outputs({position: this.pos.y, rotation: this.rotation.heading()});
+        const inputs = this.DNA.outputs({
+            position: this.pos.y,
+            rotation: this.rotation.heading(),
+            speedY: this.speed.y
+        });
         if (inputs.thrust) {
             this.thrust();
         }
@@ -150,6 +156,9 @@ export class Lander {
     }
 
     move() {
+        if (this.crashed) {
+            return;
+        }
         this.decideInputs();
         // Handle velocity
         this.speed.add(this.acceleration);
@@ -169,6 +178,9 @@ export class Lander {
         // Handle touching the ground
         const distanceInGround = this.distanceInGround();
         if (distanceInGround > 0) {
+            if (this.speed.y > CRASH_SPEED) {
+                this.crashed = true;
+            }
             this.pos.y = this.pos.y - distanceInGround;
             this.r_speed = 0;
             this.isTouchingGround = true;
@@ -213,7 +225,7 @@ export class Lander {
 
     draw() {
         this.p5.stroke(255);
-        if (this.isTouchingGround) {
+        if (this.crashed) {
             this.p5.stroke(255, 0, 0);
         }
         this.p5.strokeWeight(5);

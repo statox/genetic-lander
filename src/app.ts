@@ -16,7 +16,7 @@ const sketch = (p5: P5) => {
 
     p5.setup = () => {
         // Creating and positioning the canvas
-        H = 500;
+        H = 800;
         W = 700;
         frameRateHistory = new Array(10).fill(0);
         const canvas = p5.createCanvas(W, H);
