@@ -34,6 +34,9 @@ export class Lander {
     DNA: DNA;
     fuel: number;
     crashed: boolean;
+    bonus: number; // A number incremented to boost fitness
+    bonusRange: [number, number];
+    inBonusRange: boolean;
 
     constructor(p5: P5, id: number, sourceDNA?: DNA) {
         this.id = id;
@@ -50,7 +53,7 @@ export class Lander {
         this.r_speed = 0;
         this.rotation = p5.createVector(1, 0);
 
-        this.rotation.rotate(p5.map(Math.random(), 0, 1, -1, 1));
+        // this.rotation.rotate(p5.map(Math.random(), 0, 1, -1, 1));
 
         this.size = 50;
         this.isTouchingGround = false;
@@ -63,6 +66,10 @@ export class Lander {
 
         this.DNA = sourceDNA || new DNA();
         this.fuel = 300;
+
+        this.bonus = 0;
+        this.bonusRange = [300, 500];
+        this.inBonusRange = false;
 
         // The vertices representing the lander in the sqare of 1x1
         // these vertices are scaled, translated and rotated depending on this.size
@@ -148,7 +155,8 @@ export class Lander {
         const inputs = this.DNA.outputs({
             position: this.pos.y,
             rotation: this.rotation.heading(),
-            speedY: this.speed.y
+            speedY: this.speed.y,
+            distanceToCenter: Math.abs(this.p5.width / 2 - this.pos.x)
         });
         if (inputs.thrust) {
             this.thrust();
@@ -158,6 +166,14 @@ export class Lander {
         }
         if (inputs.rotation_counterclockwise) {
             this.rotate(false);
+        }
+    }
+
+    updateBonus() {
+        this.inBonusRange = false;
+        if (this.pos.x > this.bonusRange[0] && this.pos.x < this.bonusRange[1]) {
+            this.bonus += 1;
+            this.inBonusRange = true;
         }
     }
 
@@ -182,6 +198,9 @@ export class Lander {
 
         // Calculate the on screen position
         this.setScreenVertices();
+
+        // Update bonus for fitness
+        this.updateBonus();
 
         // Handle touching the ground
         const distanceInGround = this.distanceInGround();
@@ -235,6 +254,9 @@ export class Lander {
         this.p5.stroke(255);
         if (this.crashed) {
             this.p5.stroke(255, 0, 0);
+        }
+        if (this.inBonusRange) {
+            this.p5.stroke(0, 255, 0);
         }
         this.p5.strokeWeight(5);
         this.p5.beginShape();

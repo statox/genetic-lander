@@ -10,6 +10,9 @@ export class DNA {
 
         coef_rotation_counterclockwise: number;
         threshold_rotation_counterclockwise: number;
+
+        coef_distanceToCenter_rotation_clockwise: number;
+        coef_distanceToCenter_rotation_counterclockwise: number;
     };
 
     constructor() {
@@ -24,14 +27,16 @@ export class DNA {
             // threshold_thrust: Math.random() * 5,
 
             coef_rotation_clockwise: Math.random() - 0.5,
-            threshold_rotation_clockwise: Math.random() * 0.5,
+            coef_distanceToCenter_rotation_clockwise: Math.random() - 0.5,
+            threshold_rotation_clockwise: Math.random(),
 
             coef_rotation_counterclockwise: Math.random() - 0.5,
-            threshold_rotation_counterclockwise: Math.random() * 0.5
+            coef_distanceToCenter_rotation_counterclockwise: Math.random() - 0.5,
+            threshold_rotation_counterclockwise: Math.random()
         };
     }
 
-    outputs({position, rotation, speedY}) {
+    outputs({position, rotation, speedY, distanceToCenter}) {
         let result = {
             thrust: false,
             rotation_clockwise: false,
@@ -40,10 +45,18 @@ export class DNA {
         if (this.genes.coef_speedY * speedY + this.genes.coef_position * position > this.genes.threshold_thrust) {
             result.thrust = true;
         }
-        if (this.genes.coef_rotation_clockwise * rotation > this.genes.threshold_rotation_clockwise) {
+        if (
+            this.genes.coef_distanceToCenter_rotation_clockwise * distanceToCenter +
+                this.genes.coef_rotation_clockwise * rotation >
+            this.genes.threshold_rotation_clockwise
+        ) {
             result.rotation_clockwise = true;
         }
-        if (this.genes.coef_rotation_counterclockwise * rotation > this.genes.threshold_rotation_counterclockwise) {
+        if (
+            this.genes.coef_distanceToCenter_rotation_counterclockwise * distanceToCenter +
+                this.genes.coef_rotation_counterclockwise * rotation >
+            this.genes.threshold_rotation_counterclockwise
+        ) {
             result.rotation_counterclockwise = true;
         }
         return result;
