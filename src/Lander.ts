@@ -26,6 +26,7 @@ export class Lander {
     screenVertices: P5.Vector[];
     isTouchingGround: boolean;
     DNA: DNA;
+    fuel: number;
 
     constructor(p5) {
         this.p5 = p5;
@@ -53,6 +54,7 @@ export class Lander {
         };
 
         this.DNA = new DNA();
+        this.fuel = 300;
 
         // The vertices representing the lander in the sqare of 1x1
         // these vertices are scaled, translated and rotated depending on this.size
@@ -106,6 +108,10 @@ export class Lander {
 
     // Apply the thrust force to the lander parallel to this.rotation
     thrust() {
+        if (this.fuel <= 0) {
+            return;
+        }
+        this.fuel -= 1;
         const force = this.rotation.copy().rotate(-this.p5.HALF_PI);
         force.setMag(1);
         this.applyForce(force);
