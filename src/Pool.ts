@@ -1,139 +1,71 @@
-import P5 from 'p5';
-import {DNA} from './DNA';
+import {Composite, Render, World} from 'matter-js';
 import {Lander} from './Lander';
 
 export class Pool {
-    p5: P5;
     size: number;
     landers: Lander[];
-    ttl: number;
+    world: World;
+    render: Render;
+    tick: number;
 
-    constructor(p5: P5) {
-        this.p5 = p5;
-        this.size = 100;
-        this.ttl = 500;
+    constructor(world: World, render: Render) {
+        this.size = 20;
+        this.tick = 0;
+        this.world = world;
+        this.render = render;
+        this.createGeneration();
+    }
+
+    createGeneration() {
         this.landers = [];
         for (let i = 0; i < this.size; i++) {
-            this.landers.push(new Lander(p5, i));
+            const l = new Lander(i);
+            this.landers.push(l);
+            Composite.add(this.world, [l.body]);
         }
     }
 
     reset() {
-        this.ttl = 300;
+        this.landers.forEach((l) => {
+            Composite.remove(this.world, l.body);
+        });
+
+        this.tick = 0;
+        this.createGeneration();
     }
 
     update() {
-        this.ttl -= 1;
-        let roundFinished = true;
-        for (const lander of this.landers) {
-            lander.move();
-            lander.draw();
-
-            if (!lander.crashed && lander.fuel > 0) {
-                roundFinished = false;
+        let allFinished = true;
+        let notFinished = 0;
+        let maxMotion = -1;
+        this.landers.forEach((l) => {
+            l.drive();
+            // In theory l.body.motion should hold this value but it seems to be always 0
+            // so computing it myself
+            const motion = l.body.speed * l.body.speed + l.body.angularSpeed * l.body.angularSpeed;
+            if (motion > maxMotion) {
+                maxMotion = motion;
             }
-        }
-
-        if (roundFinished || this.ttl <= 0) {
-            this.createNewPool();
-            this.reset();
-        }
-    }
-
-    // Reset this.landers to a new generation with new genes
-    createNewPool() {
-        const DNAPool: number[] = [];
-        let results = [];
-
-        let totalFitness = 0;
-        let maxFitness = 0;
-        let avgFitness = 0;
-        let totalBonus = 0;
-        let maxBonus = 0;
-        let avgBonus = 0;
-
-        // Get the fitness of each lander and push it proportionally
-        // to DNAPool
-        for (const lander of this.landers) {
-            // add fitness to the pool
-            const fitness = this.getRawFitness(lander);
-            DNAPool.push(fitness);
-
-            // compute stats
-            results.push({
-                fitness,
-                pos: lander.pos.y,
-                fuel: lander.fuel,
-                bonus: lander.bonus
-            });
-            totalFitness += fitness;
-            totalBonus += lander.bonus;
-            if (fitness > maxFitness) {
-                maxFitness = fitness;
+            if (motion > 0.1) {
+                allFinished = false;
+                notFinished++;
             }
-            if (lander.bonus > maxBonus) {
-                maxBonus = lander.bonus;
-            }
-        }
-        avgFitness = totalFitness / this.landers.length;
-        avgBonus = totalBonus / this.landers.length;
-        console.log({
-            totalFit: totalFitness.toFixed(0).padStart(12, ' '),
-            maxFit: maxFitness.toFixed(0).padStart(9, ' '),
-            avgFit: avgFitness.toFixed(0).padStart(8, ' '),
-            maxBon: maxBonus.toFixed(0).padStart(5, ' '),
-            avgBon: avgBonus.toFixed(0).padStart(5, ' ')
         });
 
-        const DNAPoolPercentage = DNAPool.sort((a, b) => {
-            return a - b;
-        }).reduce((a, v) => {
-            if (!a.length) {
-                a.push(v);
-            } else {
-                a.push(v + a[a.length - 1]);
-            }
-            return a;
-        }, []);
-
-        // Reset each lander
-        // Take two parents in the pool make the crossover and mutate the child
-        const landerDNAs = this.landers.map((l) => l.DNA);
-        this.landers = [];
-        let selectionsStats = new Array(this.size).fill(0);
-        for (let i = 0; i < this.size; i++) {
-            const rand1 = Math.random() * totalFitness;
-            let ip1 = 0;
-            while (DNAPoolPercentage[ip1] < rand1 && ip1 < DNAPool.length - 1) {
-                ip1 += 1;
-            }
-            const p1 = landerDNAs[ip1];
-            selectionsStats[ip1] += 1;
-
-            const rand2 = Math.random() * totalFitness;
-            let ip2 = 0;
-            while (DNAPoolPercentage[ip2] < rand2 && ip2 < DNAPool.length - 1) {
-                ip2 += 1;
-            }
-            const p2 = landerDNAs[ip2];
-            selectionsStats[ip2] += 1;
-
-            const newDNA = DNA.cross(p1, p2);
-            newDNA.mutate();
-            this.landers.push(new Lander(this.p5, i, newDNA));
-
-            // this.landers.push(new Lander(this.p5, i));
+        // We use this.tick because when we reset a generation the landers haven't moved
+        // so the first update see them all as sleeping and that reset the generation again
+        // The tick is used to avoid the reset at first step
+        if (allFinished && this.tick > 2) {
+            console.log('reset', this.tick);
+            this.reset();
         }
-        // console.table(selectionsStats);
+        this.tick++;
     }
 
-    // Define fitness between
-    // 1: crashed
-    // x: bestFuel for position
-    getRawFitness(lander: Lander) {
-        if (lander.crashed) {
-            return 1;
-        }
-        return lander.pos.y * lander.fuel * lander.bonus;
+    limit() {
+        this.landers.forEach((l) => {
+            l.limitSpeed();
+            l.wrapAroundScreen();
+        });
     }
 }

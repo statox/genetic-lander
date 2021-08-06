@@ -4,13 +4,13 @@
   "description": "Genetic algorithm piloting virtual moon landers",
   "main": "index.html",
   "scripts": {
-    "start": "parcel index.html --open",
+    "start": "parcel index.html",
     "build": "parcel build index.html",
     "build-ci": "parcel build index.html --public-url /genetic-lander/"
   },
   "dependencies": {
-    "@types/p5": "0.9.0",
-    "p5": "0.9.0"
+    "@types/matter-js": "^0.17.5",
+    "matter-js": "^0.17.1"
   },
   "devDependencies": {
     "parcel-bundler": "^1.6.1",

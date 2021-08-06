@@ -1,75 +1,37 @@
-import P5 from 'p5';
-import 'p5/lib/addons/p5.dom';
-import './styles.scss';
-import {Lander} from './Lander';
-import {drawFloor} from './Floor';
+import {Engine, Events, Common, Render, Runner, Body, Bodies, Composite} from 'matter-js';
 import {Pool} from './Pool';
+const config = require('./config.json');
 
-const sketch = (p5: P5) => {
-    let pool: Pool;
-    let time: number;
-    let gravity: P5.Vector;
-    let W: number;
-    let H: number;
-    let frameRateHistory: number[];
+// create an engine
+const engine = Engine.create();
 
-    p5.setup = () => {
-        // Creating and positioning the canvas
-        H = 800;
-        W = 900;
-        frameRateHistory = new Array(10).fill(0);
-        const canvas = p5.createCanvas(W, H);
-        canvas.parent('app');
+// create a renderer
+const render = Render.create({
+    element: document.getElementById('canvas'),
+    engine: engine
+});
+Render.run(render);
+const runner = Runner.create();
+Runner.run(runner, engine);
 
-        pool = new Pool(p5);
-        time = 0;
-    };
+// Reset the canvas
+const {width: screenWidth, height: screenHeight} = config.dimensions;
+render.canvas.width = screenWidth;
+render.canvas.height = screenHeight;
 
-    p5.draw = () => {
-        p5.background(30, 30, 30);
-        drawFloor(p5);
-        time++;
-        pool.update(p5);
-        drawFPS();
-        handleInputs();
-    };
+// create the ground
+const ground = Bodies.rectangle(screenWidth / 2, screenHeight - 30, screenWidth, 60, {isStatic: true});
+Composite.add(engine.world, [ground]);
 
-    const drawFPS = () => {
-        const fpsText = `${getFrameRate()} fps`;
-        p5.noStroke();
-        p5.fill(255);
-        p5.text(fpsText, p5.width - p5.textWidth(fpsText), 10);
-    };
-    const getFrameRate = () => {
-        frameRateHistory.shift();
-        frameRateHistory.push(p5.frameRate());
-        let total = frameRateHistory.reduce((a, b) => a + b) / frameRateHistory.length;
-        return total.toFixed(0);
-    };
+// create a pool of landers
+const pool = new Pool(engine.world, render);
 
-    const handleInputs = () => {
-        let SPACE = 32;
-        if (p5.keyIsDown(SPACE)) {
-            for (const lander of pool.landers) {
-                lander.freeze();
-            }
-        }
-        if (p5.keyIsDown(p5.UP_ARROW)) {
-            for (const lander of pool.landers) {
-                lander.thrust();
-            }
-        }
-        if (p5.keyIsDown(p5.LEFT_ARROW)) {
-            for (const lander of pool.landers) {
-                lander.rotate(false);
-            }
-        }
-        if (p5.keyIsDown(p5.RIGHT_ARROW)) {
-            for (const lander of pool.landers) {
-                lander.rotate(true);
-            }
-        }
-    };
-};
+// Before anything change make the landers caculate their next move
+Events.on(runner, 'beforeTick', () => {
+    pool.update();
+});
 
-new P5(sketch);
+// After everything is updated limit the landers speed
+Events.on(runner, 'afterUpdate', () => {
+    pool.limit();
+});
